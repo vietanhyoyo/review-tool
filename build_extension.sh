@@ -4,10 +4,10 @@ set -e
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$DIR"
 
-rm -f web/extension.zip
+rm -f extension.zip
 cd extension
-zip -r ../web/extension.zip manifest.json popup.html popup.js
+zip -r ../extension.zip manifest.json popup.html popup.js
 cd ..
 
-echo "Đã tạo web/extension.zip"
-echo "Deploy lên Vercel: npx vercel --prod"
+echo "Đã tạo extension.zip"
+echo "Commit và push lên GitHub, bật GitHub Pages từ nhánh main."
