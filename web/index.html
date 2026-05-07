@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Coupang Review Tool</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <section class="panel hero">
+        <p class="eyebrow">Chrome Session Bridge</p>
+        <h1>Lấy review Coupang bằng session Chrome thật</h1>
+        <p class="lede">
+          Trang này không tự đọc cookie của Coupang. Thay vào đó, Python sẽ kết nối
+          vào Chrome thật của bạn qua remote debugging và dùng chính session/cookie
+          trong profile đó để scrape.
+        </p>
+      </section>
+
+      <section class="panel steps">
+        <h2>Hướng dẫn</h2>
+        <ol>
+          <li>Bấm <strong>Mở Chrome</strong> — một cửa sổ Chrome riêng sẽ tự mở.</li>
+          <li>Đăng nhập Coupang trong cửa sổ đó (chỉ cần làm 1 lần, lần sau tự nhớ).</li>
+          <li>Quay lại đây, bấm <strong>Kiểm tra kết nối</strong>, rồi bắt đầu scrape.</li>
+        </ol>
+        <p class="note">Chrome thường của bạn vẫn mở bình thường — cửa sổ mới chạy song song.</p>
+      </section>
+
+      <section class="panel form-panel">
+        <div class="toolbar">
+          <button id="launchChromeButton" type="button" class="secondary">Mở Chrome</button>
+          <button id="checkChromeButton" type="button" class="secondary">Kiểm tra kết nối</button>
+          <span id="chromeStatus" class="status idle">Chưa kiểm tra</span>
+        </div>
+
+        <form id="scrapeForm">
+          <label>
+            <span>Link sản phẩm Coupang</span>
+            <input id="url" name="url" type="url" placeholder="https://www.coupang.com/vp/products/..." required>
+          </label>
+
+          <div class="grid">
+            <label>
+              <span>Số trang review</span>
+              <input id="pages" name="pages" type="number" min="1" value="10" required>
+            </label>
+            <label>
+              <span>File output</span>
+              <input id="output" name="output" type="text" value="output/coupang_reviews.xlsx" required>
+            </label>
+          </div>
+
+          <label>
+            <span>CDP URL</span>
+            <input id="cdpUrl" name="cdpUrl" type="text" value="http://127.0.0.1:9222" required>
+          </label>
+
+          <button id="submitButton" type="submit" class="primary">Bắt đầu lấy review</button>
+        </form>
+      </section>
+
+      <section class="panel result-panel">
+        <h2>Kết quả</h2>
+        <pre id="result">Chưa có tác vụ nào được chạy.</pre>
+        <a id="downloadLink" class="download-btn" hidden></a>
+      </section>
+    </main>
+    <script src="/app.js"></script>
+  </body>
+</html>

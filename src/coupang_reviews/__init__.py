@@ -1,0 +1,2 @@
+"""Coupang review scraper package."""
+

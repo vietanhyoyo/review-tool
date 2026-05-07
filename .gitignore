@@ -1,0 +1,23 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Playwright
+playwright/.cache/
+
+# Chrome automation profile (contains session cookies)
+.chrome-cdp-profile/
+
+# Session data — may contain cookies, do not commit
+storage-state.json
+
+# Output data files
+output/
+
+# macOS
+.DS_Store
+
+# Editor / tool artifacts
+.codex_write_test
+
