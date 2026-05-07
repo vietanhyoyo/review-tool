@@ -143,37 +143,85 @@ async function scrapeAllReviews(maxPages) {
   }
 
   function realClick(el) {
-    // Dispatch full mouse event sequence so React/Vue handlers fire correctly
-    for (const type of ['mousedown', 'mouseup', 'click']) {
+    for (const type of ['mousedown', 'mouseup', 'click'])
       el.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true }));
+  }
+
+  // Find all numeric page-number buttons currently visible on the page.
+  // Scoped to the review section's sibling/parent area to avoid stray numbers.
+  function getVisiblePageBtns() {
+    // Start from the review section and walk up until we find the pagination
+    const section = getSection();
+    const searchRoot = section?.parentElement ?? document;
+    return Array.from(searchRoot.querySelectorAll('button, a')).filter(el => {
+      const text = el.textContent.replace(/\s+/g, ' ').trim();
+      return /^\d+$/.test(text) && parseInt(text) >= 1 && parseInt(text) <= 9999;
+    });
+  }
+
+  // The "next group" button (>) sits immediately after the last visible page number.
+  // We find it positionally — no reliance on class names or text content.
+  function getNextGroupBtn() {
+    const pageBtns = getVisiblePageBtns();
+    if (pageBtns.length === 0) return null;
+
+    const last = pageBtns[pageBtns.length - 1];
+    const parent = last.parentElement;
+    if (!parent) return null;
+
+    // Walk siblings after the last page-number button
+    let passed = false;
+    for (const child of parent.children) {
+      if (!passed) {
+        if (child === last || child.contains(last)) passed = true;
+        continue;
+      }
+      const btn = child.matches('button, a') ? child : child.querySelector('button, a');
+      if (btn && !btn.disabled && btn.getAttribute('aria-disabled') !== 'true') return btn;
     }
+    return null;
+  }
+
+  // Find a specific page-number button among the currently visible page buttons.
+  function findPageBtn(label) {
+    return getVisiblePageBtns().find(el =>
+      el.textContent.replace(/\s+/g, ' ').trim() === label &&
+      !el.disabled &&
+      el.getAttribute('aria-disabled') !== 'true' &&
+      el.getAttribute('aria-current') !== 'page'
+    ) ?? null;
   }
 
   async function goToNextPage(nextNum) {
     const prevSig = sectionSignature();
     const label = String(nextNum);
 
-    // Find page button — search section first, fall back to whole document.
-    // Pagination is often a sibling of .sdp-review, not inside it.
-    function findPageBtn(root) {
-      for (const el of root.querySelectorAll('button, a')) {
-        const text = el.textContent.replace(/\s+/g, ' ').trim();
-        if (text !== label) continue;
-        if (el.disabled || el.getAttribute('aria-disabled') === 'true') continue;
-        if (el.getAttribute('aria-current') === 'page') continue;
-        return el;
+    // If the target page button is not yet visible, click the ">" arrow
+    // (next group) until it appears. Coupang shows 10 pages per group.
+    async function revealPageBtn() {
+      let btn = findPageBtn(label);
+      if (btn) return btn;
+
+      for (let i = 0; i < 20; i++) {
+        const nextGroup = getNextGroupBtn();
+        if (!nextGroup) break;
+
+        realClick(nextGroup);
+        await sleep(800); // wait for new page numbers to render
+
+        btn = findPageBtn(label);
+        if (btn) return btn;
       }
       return null;
     }
 
-    const section = getSection();
-    const btn = (section ? findPageBtn(section) : null) ?? findPageBtn(document);
+    const btn = await revealPageBtn();
     if (!btn) return false;
 
     btn.scrollIntoView({ behavior: 'instant', block: 'nearest' });
     await sleep(200);
     realClick(btn);
-    await sleep(800); // let AJAX start before polling
+    await sleep(800);
 
     // Wait up to 15s for review content to change
     const deadline = Date.now() + 15000;
@@ -219,13 +267,73 @@ async function scrapeAllReviews(maxPages) {
 }
 
 
+// ─── Detect total review pages (injected into tab) ───────────────────────────
+async function detectTotalPages() {
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+  function realClick(el) {
+    for (const type of ['mousedown', 'mouseup', 'click'])
+      el.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true }));
+  }
+
+  function getPaginationArea() {
+    const nextBtn = document.querySelector('button.sdp-review__article__page__next');
+    if (nextBtn) return nextBtn.closest('ol, ul, nav, div[class*="page"]') ?? nextBtn.parentElement;
+    return document.querySelector('[class*="sdp-review__article__page"], [class*="review__article__page"]');
+  }
+
+  function getMaxVisible() {
+    const root = getPaginationArea() ?? document;
+    let max = 0;
+    for (const el of root.querySelectorAll('button, a')) {
+      const text = el.textContent.replace(/\s+/g, ' ').trim();
+      if (!/^\d+$/.test(text)) continue;
+      const n = parseInt(text);
+      if (n > max && n < 10000) max = n;
+    }
+    return max;
+  }
+
+  function getNextGroupBtn() {
+    return (
+      document.querySelector('button.sdp-review__article__page__next') ||
+      Array.from(document.querySelectorAll('button, a')).find(el => {
+        const cls = el.className || '';
+        const text = el.textContent.replace(/\s+/g, ' ').trim();
+        return (cls.includes('page__next') || text === '다음') &&
+               !el.disabled && el.getAttribute('aria-disabled') !== 'true';
+      })
+    );
+  }
+
+  let max = getMaxVisible();
+  if (max === 0) return 0;
+
+  // Keep clicking "next group" arrow until it disappears or max stops growing
+  for (let i = 0; i < 200; i++) {
+    const btn = getNextGroupBtn();
+    if (!btn) break;
+
+    realClick(btn);
+    await sleep(400);
+
+    const newMax = getMaxVisible();
+    if (newMax <= max) break;
+    max = newMax;
+  }
+
+  return max;
+}
+
+
 // ─── Popup UI logic ───────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
-  const statusEl = document.getElementById('status');
-  const mainEl   = document.getElementById('main');
-  const warnEl   = document.getElementById('notOnCoupang');
-  const btn      = document.getElementById('scrapeBtn');
-  const pagesIn  = document.getElementById('pages');
+  const statusEl    = document.getElementById('status');
+  const mainEl      = document.getElementById('main');
+  const warnEl      = document.getElementById('notOnCoupang');
+  const btn         = document.getElementById('scrapeBtn');
+  const scrapeAllBtn = document.getElementById('scrapeAllBtn');
+  const pagesIn     = document.getElementById('pages');
 
   function setStatus(msg, kind) {
     statusEl.textContent = msg;
@@ -240,36 +348,51 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   mainEl.hidden = false;
 
-  btn.addEventListener('click', async () => {
-    const maxPages = Math.max(1, parseInt(pagesIn.value) || 10);
-    btn.disabled = true;
-    setStatus('Đang lấy đánh giá... (có thể mất vài phút)', 'loading');
+  // Auto-detect total pages and prefill input
+  btn.disabled = true;
+  setStatus('Đang đếm số trang...', 'loading');
+  try {
+    const [{ result: total }] = await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: detectTotalPages,
+    });
+    if (total > 0) {
+      pagesIn.value = total;
+      setStatus(`Tìm thấy ${total} trang đánh giá.`, 'success');
+    } else {
+      setStatus('Chưa thấy phần đánh giá — hãy cuộn xuống trước.', 'error');
+    }
+  } catch {
+    setStatus('', '');
+  } finally {
+    btn.disabled = false;
+    scrapeAllBtn.disabled = false;
+  }
 
+  async function runScrape(maxPages) {
+    btn.disabled = true;
+    scrapeAllBtn.disabled = true;
+    setStatus('Đang lấy đánh giá... (có thể mất vài phút)', 'loading');
     try {
       const [{ result }] = await chrome.scripting.executeScript({
         target: { tabId: tab.id },
         func: scrapeAllReviews,
         args: [maxPages],
       });
-
-      if (!result.ok) {
-        setStatus(result.error, 'error');
-        return;
-      }
-
-      if (result.reviews.length === 0) {
-        setStatus('Không tìm thấy đánh giá nào.', 'error');
-        return;
-      }
-
+      if (!result.ok) { setStatus(result.error, 'error'); return; }
+      if (result.reviews.length === 0) { setStatus('Không tìm thấy đánh giá nào.', 'error'); return; }
       downloadExcel(result.reviews);
       setStatus(`Hoàn tất! Đã tải ${result.reviews.length} đánh giá.`, 'success');
     } catch (err) {
       setStatus(`Lỗi: ${err.message}`, 'error');
     } finally {
       btn.disabled = false;
+      scrapeAllBtn.disabled = false;
     }
-  });
+  }
+
+  scrapeAllBtn.addEventListener('click', () => runScrape(9999));
+  btn.addEventListener('click', () => runScrape(parseInt(pagesIn.value) || 9999));
 });
 
 function downloadExcel(reviews) {

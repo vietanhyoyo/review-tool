@@ -10,14 +10,16 @@
   label { display: block; margin-bottom: 4px; font-size: 13px; color: #444; }
   input[type=number] { width: 100%; padding: 7px 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
   input[type=number]:focus { outline: none; border-color: #e53e3e; }
-  button#scrapeBtn {
-    width: 100%; margin-top: 12px; padding: 9px;
-    background: #e53e3e; color: white; border: none;
-    border-radius: 6px; font-size: 14px; font-weight: 500;
-    cursor: pointer; transition: background .15s;
+  .btn-row { display: flex; gap: 8px; margin-top: 12px; }
+  .btn-row button {
+    flex: 1; padding: 9px; border: none; border-radius: 6px;
+    font-size: 14px; font-weight: 500; cursor: pointer; transition: background .15s;
   }
-  button#scrapeBtn:hover:not(:disabled) { background: #c53030; }
-  button#scrapeBtn:disabled { opacity: 0.5; cursor: default; }
+  #scrapeAllBtn { background: #e53e3e; color: white; }
+  #scrapeAllBtn:hover:not(:disabled) { background: #c53030; }
+  #scrapeBtn { background: #f0f0f0; color: #333; }
+  #scrapeBtn:hover:not(:disabled) { background: #e0e0e0; }
+  .btn-row button:disabled { opacity: 0.5; cursor: default; }
   #status { margin-top: 10px; font-size: 13px; min-height: 18px; line-height: 1.5; }
   #status.loading { color: #555; }
   #status.error   { color: #c53030; }
@@ -34,8 +36,11 @@
 
   <div id="main" hidden>
     <label for="pages">Số trang cần lấy</label>
-    <input type="number" id="pages" value="10" min="1" max="200">
-    <button id="scrapeBtn">Lấy đánh giá</button>
+    <input type="number" id="pages" placeholder="Để trống = tất cả trang" min="1">
+    <div class="btn-row">
+      <button id="scrapeAllBtn">Lấy tất cả</button>
+      <button id="scrapeBtn">Lấy X trang</button>
+    </div>
     <div id="status"></div>
     <p class="note">Giữ popup mở trong khi đang lấy dữ liệu.</p>
   </div>
