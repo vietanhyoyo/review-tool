@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { width: 300px; padding: 16px; font-family: system-ui, sans-serif; font-size: 14px; color: #1a1a1a; }
+  h2 { font-size: 15px; font-weight: 600; margin-bottom: 14px; color: #e53e3e; }
+  .warning { background: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; padding: 10px 12px; font-size: 13px; line-height: 1.5; }
+  label { display: block; margin-bottom: 4px; font-size: 13px; color: #444; }
+  input[type=number] { width: 100%; padding: 7px 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
+  input[type=number]:focus { outline: none; border-color: #e53e3e; }
+  button#scrapeBtn {
+    width: 100%; margin-top: 12px; padding: 9px;
+    background: #e53e3e; color: white; border: none;
+    border-radius: 6px; font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: background .15s;
+  }
+  button#scrapeBtn:hover:not(:disabled) { background: #c53030; }
+  button#scrapeBtn:disabled { opacity: 0.5; cursor: default; }
+  #status { margin-top: 10px; font-size: 13px; min-height: 18px; line-height: 1.5; }
+  #status.loading { color: #555; }
+  #status.error   { color: #c53030; }
+  #status.success { color: #276749; }
+  .note { margin-top: 8px; font-size: 11px; color: #888; }
+</style>
+</head>
+<body>
+  <h2>Coupang Review Scraper</h2>
+
+  <div id="notOnCoupang" class="warning" hidden>
+    Hãy mở trang <strong>sản phẩm Coupang</strong> trước, rồi click lại icon extension.
+  </div>
+
+  <div id="main" hidden>
+    <label for="pages">Số trang cần lấy</label>
+    <input type="number" id="pages" value="10" min="1" max="200">
+    <button id="scrapeBtn">Lấy đánh giá</button>
+    <div id="status"></div>
+    <p class="note">Giữ popup mở trong khi đang lấy dữ liệu.</p>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

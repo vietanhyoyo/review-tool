@@ -1,0 +1,2 @@
+#!/bin/bash
+exec "/Users/vhec/Documents/myproject/review-tool/.venv/bin/python" "/Users/vhec/Documents/myproject/review-tool/launch_webapp.py"

@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "Coupang Review Scraper",
+  "version": "1.0.0",
+  "description": "Lấy đánh giá sản phẩm Coupang và xuất ra file Excel",
+  "permissions": ["activeTab", "scripting"],
+  "host_permissions": ["https://www.coupang.com/*"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Coupang Review Scraper"
+  }
+}

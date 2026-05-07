@@ -6,6 +6,10 @@ const result = document.getElementById("result");
 const downloadLink = document.getElementById("downloadLink");
 const form = document.getElementById("scrapeForm");
 
+// When served from Vercel (not localhost), call the local Python server directly
+const isLocal = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+const API = isLocal ? "" : "http://localhost:8000";
+
 function setStatus(message, kind) {
   chromeStatus.textContent = message;
   chromeStatus.className = `status ${kind}`;
@@ -15,7 +19,7 @@ async function launchChrome() {
   setStatus("Đang mở Chrome...", "loading");
   launchButton.disabled = true;
   try {
-    const response = await fetch("/api/launch-chrome");
+    const response = await fetch(`${API}/api/launch-chrome`);
     const payload = await response.json();
     if (!payload.ok) {
       setStatus("Không mở được Chrome", "error");
@@ -37,7 +41,7 @@ async function launchChrome() {
 async function checkChrome() {
   setStatus("Đang kiểm tra...", "loading");
   try {
-    const response = await fetch("/api/check-chrome");
+    const response = await fetch(`${API}/api/check-chrome`);
     const payload = await response.json();
     if (!payload.ok) {
       setStatus("Không kết nối được", "error");
@@ -73,7 +77,7 @@ form.addEventListener("submit", async (event) => {
   downloadLink.hidden = true;
 
   try {
-    const response = await fetch("/api/scrape", {
+    const response = await fetch(`${API}/api/scrape`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -85,7 +89,7 @@ form.addEventListener("submit", async (event) => {
     }
 
     result.textContent = `Hoàn tất. Đã lưu ${data.rows} review vào ${data.output}`;
-    downloadLink.href = `/api/download?file=${encodeURIComponent(data.output)}`;
+    downloadLink.href = `${API}/api/download?file=${encodeURIComponent(data.output)}`;
     downloadLink.textContent = `Tải file Excel (${data.rows} review)`;
     downloadLink.download = data.output.split("/").pop();
     downloadLink.hidden = false;

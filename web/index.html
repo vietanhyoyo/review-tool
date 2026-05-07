@@ -1,72 +1,148 @@
 <!doctype html>
 <html lang="vi">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Coupang Review Tool</title>
-    <link rel="stylesheet" href="/styles.css">
-  </head>
-  <body>
-    <main class="shell">
-      <section class="panel hero">
-        <p class="eyebrow">Chrome Session Bridge</p>
-        <h1>Lấy review Coupang bằng session Chrome thật</h1>
-        <p class="lede">
-          Trang này không tự đọc cookie của Coupang. Thay vào đó, Python sẽ kết nối
-          vào Chrome thật của bạn qua remote debugging và dùng chính session/cookie
-          trong profile đó để scrape.
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Coupang Review Scraper</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: #f7f7f7; color: #1a1a1a; line-height: 1.6; }
+    .wrap { max-width: 680px; margin: 0 auto; padding: 48px 20px; }
+
+    h1 { font-size: 28px; font-weight: 700; color: #e53e3e; margin-bottom: 8px; }
+    .subtitle { font-size: 16px; color: #555; margin-bottom: 40px; }
+
+    .card { background: white; border-radius: 12px; padding: 28px 32px; margin-bottom: 24px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+    .card h2 { font-size: 17px; font-weight: 600; margin-bottom: 16px; }
+
+    .steps { counter-reset: step; list-style: none; }
+    .steps li { counter-increment: step; display: flex; gap: 14px; margin-bottom: 18px; }
+    .steps li::before {
+      content: counter(step);
+      flex-shrink: 0; width: 28px; height: 28px;
+      background: #e53e3e; color: white; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; margin-top: 1px;
+    }
+    .steps li p { margin-top: 2px; }
+    .steps li strong { display: block; font-size: 15px; margin-bottom: 2px; }
+
+    .badge {
+      display: inline-block; background: #fff3f3; border: 1px solid #fca5a5;
+      color: #c53030; border-radius: 6px; padding: 2px 8px;
+      font-size: 12px; font-weight: 600; vertical-align: middle;
+    }
+
+    code {
+      background: #f0f0f0; border-radius: 4px;
+      padding: 2px 6px; font-size: 13px; font-family: monospace;
+    }
+
+    .download-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: #e53e3e; color: white; text-decoration: none;
+      padding: 11px 22px; border-radius: 8px; font-size: 15px; font-weight: 600;
+      margin-top: 4px; transition: background .15s;
+    }
+    .download-btn:hover { background: #c53030; }
+
+    .note { font-size: 13px; color: #777; margin-top: 10px; }
+
+    .faq dt { font-weight: 600; margin-top: 16px; }
+    .faq dd { color: #444; margin-left: 0; margin-top: 4px; font-size: 14px; }
+
+    hr { border: none; border-top: 1px solid #eee; margin: 4px 0 20px; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Coupang Review Scraper</h1>
+  <p class="subtitle">Extension Chrome — không cần cài Python, không cần Terminal.</p>
+
+  <!-- Download -->
+  <div class="card">
+    <h2>Bước 1 — Tải extension</h2>
+    <a class="download-btn" href="extension.zip" download>
+      ⬇ Tải extension.zip
+    </a>
+    <p class="note">Phiên bản 1.0.0 · Chỉ yêu cầu quyền truy cập coupang.com</p>
+  </div>
+
+  <!-- Install -->
+  <div class="card">
+    <h2>Bước 2 — Cài vào Chrome</h2>
+    <ol class="steps">
+      <li>
+        <p>
+          <strong>Giải nén file</strong>
+          Giải nén <code>extension.zip</code> vào một thư mục bất kỳ.
         </p>
-      </section>
+      </li>
+      <li>
+        <p>
+          <strong>Mở trang extension</strong>
+          Vào Chrome, gõ <code>chrome://extensions</code> vào thanh địa chỉ và nhấn Enter.
+        </p>
+      </li>
+      <li>
+        <p>
+          <strong>Bật Developer mode</strong>
+          Bật công tắc <span class="badge">Developer mode</span> ở góc trên bên phải.
+        </p>
+      </li>
+      <li>
+        <p>
+          <strong>Load extension</strong>
+          Bấm <span class="badge">Load unpacked</span> → chọn thư mục vừa giải nén.
+        </p>
+      </li>
+    </ol>
+    <p class="note">Chỉ cần cài một lần. Extension sẽ xuất hiện trên thanh công cụ Chrome.</p>
+  </div>
 
-      <section class="panel steps">
-        <h2>Hướng dẫn</h2>
-        <ol>
-          <li>Bấm <strong>Mở Chrome</strong> — một cửa sổ Chrome riêng sẽ tự mở.</li>
-          <li>Đăng nhập Coupang trong cửa sổ đó (chỉ cần làm 1 lần, lần sau tự nhớ).</li>
-          <li>Quay lại đây, bấm <strong>Kiểm tra kết nối</strong>, rồi bắt đầu scrape.</li>
-        </ol>
-        <p class="note">Chrome thường của bạn vẫn mở bình thường — cửa sổ mới chạy song song.</p>
-      </section>
+  <!-- Use -->
+  <div class="card">
+    <h2>Bước 3 — Sử dụng</h2>
+    <ol class="steps">
+      <li>
+        <p>
+          <strong>Mở trang sản phẩm Coupang</strong>
+          Đăng nhập Coupang và mở trang sản phẩm cần lấy đánh giá.
+        </p>
+      </li>
+      <li>
+        <p>
+          <strong>Click icon extension</strong>
+          Bấm vào icon <span class="badge">Coupang Review Scraper</span> trên thanh công cụ Chrome.
+        </p>
+      </li>
+      <li>
+        <p>
+          <strong>Chọn số trang và bấm Lấy đánh giá</strong>
+          File CSV sẽ tự động tải về — mở bằng Excel là xong.
+        </p>
+      </li>
+    </ol>
+  </div>
 
-      <section class="panel form-panel">
-        <div class="toolbar">
-          <button id="launchChromeButton" type="button" class="secondary">Mở Chrome</button>
-          <button id="checkChromeButton" type="button" class="secondary">Kiểm tra kết nối</button>
-          <span id="chromeStatus" class="status idle">Chưa kiểm tra</span>
-        </div>
+  <!-- FAQ -->
+  <div class="card">
+    <h2>Câu hỏi thường gặp</h2>
+    <hr>
+    <dl class="faq">
+      <dt>File tải về là CSV, mở trong Excel có hiển thị tiếng Hàn đúng không?</dt>
+      <dd>Có. File được lưu với UTF-8 BOM nên Excel trên Windows và Mac đều hiển thị đúng tiếng Hàn.</dd>
 
-        <form id="scrapeForm">
-          <label>
-            <span>Link sản phẩm Coupang</span>
-            <input id="url" name="url" type="url" placeholder="https://www.coupang.com/vp/products/..." required>
-          </label>
+      <dt>Extension có đọc dữ liệu cá nhân hay gửi dữ liệu ra ngoài không?</dt>
+      <dd>Không. Extension chỉ đọc nội dung trang Coupang đang mở và tạo file CSV ngay trên máy bạn. Không có server trung gian.</dd>
 
-          <div class="grid">
-            <label>
-              <span>Số trang review</span>
-              <input id="pages" name="pages" type="number" min="1" value="10" required>
-            </label>
-            <label>
-              <span>File output</span>
-              <input id="output" name="output" type="text" value="output/coupang_reviews.xlsx" required>
-            </label>
-          </div>
+      <dt>Tại sao phải đăng nhập Coupang?</dt>
+      <dd>Coupang dùng Akamai Bot Protection — chỉ trình duyệt thật đã đăng nhập mới vào được trang đánh giá.</dd>
 
-          <label>
-            <span>CDP URL</span>
-            <input id="cdpUrl" name="cdpUrl" type="text" value="http://127.0.0.1:9222" required>
-          </label>
-
-          <button id="submitButton" type="submit" class="primary">Bắt đầu lấy review</button>
-        </form>
-      </section>
-
-      <section class="panel result-panel">
-        <h2>Kết quả</h2>
-        <pre id="result">Chưa có tác vụ nào được chạy.</pre>
-        <a id="downloadLink" class="download-btn" hidden></a>
-      </section>
-    </main>
-    <script src="/app.js"></script>
-  </body>
+      <dt>Cài extension có an toàn không?</dt>
+      <dd>Extension chỉ yêu cầu quyền <code>activeTab</code> và <code>scripting</code> trên <code>coupang.com</code>. Bạn có thể xem toàn bộ code trong thư mục đã giải nén.</dd>
+    </dl>
+  </div>
+</div>
+</body>
 </html>
