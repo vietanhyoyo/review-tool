@@ -142,25 +142,40 @@ async function scrapeAllReviews(maxPages) {
     return rows;
   }
 
+  function realClick(el) {
+    // Dispatch full mouse event sequence so React/Vue handlers fire correctly
+    for (const type of ['mousedown', 'mouseup', 'click']) {
+      el.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true }));
+    }
+  }
+
   async function goToNextPage(nextNum) {
-    const section = getSection();
-    if (!section) return false;
     const prevSig = sectionSignature();
     const label = String(nextNum);
 
-    let clicked = false;
-    for (const btn of section.querySelectorAll('button, a')) {
-      if (btn.textContent.trim() === label && !btn.disabled) {
-        btn.scrollIntoView({ behavior: 'instant', block: 'center' });
-        btn.click();
-        section.scrollIntoView({ behavior: 'instant', block: 'start' });
-        clicked = true;
-        break;
+    // Find page button — search section first, fall back to whole document.
+    // Pagination is often a sibling of .sdp-review, not inside it.
+    function findPageBtn(root) {
+      for (const el of root.querySelectorAll('button, a')) {
+        const text = el.textContent.replace(/\s+/g, ' ').trim();
+        if (text !== label) continue;
+        if (el.disabled || el.getAttribute('aria-disabled') === 'true') continue;
+        if (el.getAttribute('aria-current') === 'page') continue;
+        return el;
       }
+      return null;
     }
-    if (!clicked) return false;
 
-    // Wait up to 15s for reviews to change
+    const section = getSection();
+    const btn = (section ? findPageBtn(section) : null) ?? findPageBtn(document);
+    if (!btn) return false;
+
+    btn.scrollIntoView({ behavior: 'instant', block: 'nearest' });
+    await sleep(200);
+    realClick(btn);
+    await sleep(800); // let AJAX start before polling
+
+    // Wait up to 15s for review content to change
     const deadline = Date.now() + 15000;
     while (Date.now() < deadline) {
       await sleep(600);
